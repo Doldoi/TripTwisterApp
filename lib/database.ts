@@ -1,82 +1,52 @@
-import Database from "better-sqlite3"
-import path from "path"
+import { supabase } from "./supabase"
 import type { Destination, SearchParams } from "@/types/destination"
 
-// 데이터베이스 연결
-const dbPath = path.join(process.cwd(), "lib", "data.db")
-let db: any = null
-
-try {
-  db = new Database(dbPath, { readonly: true })
-  console.log("데이터베이스 연결 성공:", dbPath)
-
-  // 테이블 구조 확인
-  const tableInfo = db.prepare("PRAGMA table_info(datatable)").all()
-  console.log(
-    "테이블 구조:",
-    tableInfo.map((col: any) => col.name),
-  )
-
-  // 출발지 값 확인
-  const locations = db.prepare("SELECT DISTINCT departure_location FROM datatable").all()
-  console.log(
-    "사용 가능한 출발지:",
-    locations.map((loc: any) => loc.departure_location),
-  )
-} catch (error) {
-  console.error("데이터베이스 연결 오류:", error)
-}
-
-// 여행지 검색 함수
-export function getDestinationByParams(params: SearchParams): Destination | null {
+export async function getDestinationByParams(params: SearchParams): Promise<Destination | null> {
   try {
-    if (!db) {
-      console.error("데이터베이스 연결이 없습니다.")
-      return null
-    }
-
     const { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju } = params
     console.log("검색 조건:", { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju })
 
     // 교통수단에 따른 시간 컬럼 선택
-    const timeColumn = transportMode === "car" ? "drive_time" : "drive_time"
+    const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
 
-    let query = `
-      SELECT rowid, * FROM datatable 
-      WHERE departure_location = ? 
-      AND ${timeColumn} >= ? 
-      AND ${timeColumn} <= ?
-      AND ${timeColumn} IS NOT NULL
-    `
+    let query = supabase
+      .from("destinations")
+      .select("*")
+      .eq("출발지", location)
+      .gte(timeColumn, minTravelTime)
+      .lte(timeColumn, maxTravelTime)
+      .not(timeColumn, "is", null)
 
-    const queryParams: any[] = [location, minTravelTime, maxTravelTime]
-
-    // 제주도 제외 옵션이 활성화된 경우
+    // 제주도 제외 조건
     if (excludeJeju === true || excludeJeju === "true") {
-      query += ` AND is_jeju = 0`
-      console.log("제주도 제외 조건 적용됨")
+      query = query.eq("is_jeju", false)
     }
 
-    // 제외할 ID가 있는 경우
+    // 제외할 ID 조건
     if (excludeId) {
-      query += ` AND rowid != ?`
-      queryParams.push(excludeId)
+      query = query.neq("id", excludeId)
     }
 
-    query += ` ORDER BY RANDOM() LIMIT 1`
+    const { data, error } = await query
 
-    console.log("실행 쿼리:", query)
-    console.log("쿼리 파라미터:", queryParams)
+    if (error) {
+      console.error("Supabase 조회 오류:", error)
+      return null
+    }
 
-    const stmt = db.prepare(query)
-    const result = stmt.get(...queryParams) as any
+    if (!data || data.length === 0) {
+      console.log("조건에 맞는 여행지가 없습니다")
+      return null
+    }
 
-    console.log("쿼리 결과:", result)
+    // 랜덤하게 하나 선택
+    const randomIndex = Math.floor(Math.random() * data.length)
+    const result = data[randomIndex]
 
-    if (!result) return null
+    console.log("선택된 여행지:", result.name)
 
     return {
-      id: result.rowid,
+      id: result.id,
       name: result.name,
       address: result.address,
       image: result.image,
@@ -87,15 +57,11 @@ export function getDestinationByParams(params: SearchParams): Destination | null
       description: result.description,
     }
   } catch (error) {
-    console.error("데이터베이스 조회 오류:", error)
+    console.error("데이터 조회 오류:", error)
     return null
   }
 }
 
-// 데이터베이스 연결 종료
 export function closeDatabase() {
-  if (db) {
-    db.close()
-    console.log("데이터베이스 연결 종료")
-  }
+  // Supabase는 자동으로 연결 관리하므로 불필요
 }
