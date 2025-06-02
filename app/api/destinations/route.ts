@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
       maxTravelTime: body.maxTravelTime,
       transportMode: body.transportMode,
       excludeId: body.excludeId,
-      excludeJeju: body.excludeJeju, // 이 줄이 빠져있었습니다!
+      excludeJeju: body.excludeJeju,
     }
 
-    const destination = getDestinationByParams(params)
+    const destination = await getDestinationByParams(params)
     console.log("API 응답:", destination ? "여행지 찾음" : "여행지 없음")
 
     return NextResponse.json({ destination })
