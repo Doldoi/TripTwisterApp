@@ -39,7 +39,7 @@ export default function ShareButtons({ title, destinationName }: ShareButtonsPro
           objectType: "feed",
           content: {
             title: title,
-            description: `Trip Twister에서 ${destinationName}을(를) 추천받았어요! 랜덤 1박2일 여행지 추천 서비스`,
+            description: `Trip Twister에서 ${destinationName}을(를) 추천받았어요!`,
             imageUrl: `${window.location.origin}/images/share-image.png`, // 공유용 이미지 경로
             link: {
               mobileWebUrl: window.location.href,

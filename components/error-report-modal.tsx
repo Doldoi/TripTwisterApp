@@ -1,16 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, AlertTriangle } from "lucide-react"
+import { X, AlertTriangle, ExternalLink } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import type { Destination } from "@/types/destination"
+
+interface Destination {
+  name: string
+  address: string
+}
 
 interface ErrorReportModalProps {
   isOpen: boolean
@@ -42,30 +45,33 @@ export default function ErrorReportModal({ isOpen, onClose, destination, searchP
     setIsSubmitting(true)
 
     try {
-      // 구글폼 URL - 실제 구글폼 ID로 교체해야 합니다
-      const GOOGLE_FORM_ID = "@구글폼ID입력@" // 실제 구글폼 ID로 교체
+      // 구글폼 설정
+      const GOOGLE_FORM_ID = "1FAIpQLSdHm45LGMnP8nzEXszEbF_hvsHgR5Mnitry-o1hyJujMnMI0Q"
 
-      // 구글폼 필드 entry ID들 - 실제 구글폼의 entry ID로 교체해야 합니다
+      // 구글폼 필드 entry ID들 (실제 구글폼에서 확인한 값들)
       const formData = new URLSearchParams({
-        "entry.@여행지명필드ID입력@": destination.name, // 여행지명 필드
-        "entry.@주소필드ID입력@": destination.address, // 주소 필드
-        "entry.@오류유형필드ID입력@": errorType, // 오류유형 필드
-        "entry.@상세설명필드ID입력@": description, // 상세설명 필드
-        "entry.@출발지필드ID입력@": searchParams.location as string, // 출발지 필드
-        "entry.@검색조건필드ID입력@": JSON.stringify(searchParams), // 검색조건 필드
-        "entry.@페이지URL필드ID입력@": window.location.href, // 페이지URL 필드
-        "entry.@신고시간필드ID입력@": new Date().toLocaleString("ko-KR"), // 신고시간 필드
+        // 기본 필드들
+        "entry.1598684535": destination.name, // 여행지명
+        "entry.914112765": destination.address, // 여행지 주소
+        "entry.1874426262": errorType, // 오류유형
+        "entry.644474178": description, // 상세설명
+
+        // 선택적 필드들 (값이 있을 때만 추가)
+        ...(searchParams.location && { "entry.891573289": searchParams.location as string }), // 출발지
+        "entry.1970524550": JSON.stringify(searchParams), // 검색조건
+        "entry.1979130759": window.location.href, // 페이지URL
+        "entry.1817528393": new Date().toLocaleString("ko-KR"), // 신고시간
       })
 
-      // 구글폼 URL 생성
-      const googleFormUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform?${formData.toString()}`
+      // 구글폼 URL 생성 (usp=pp_url 파라미터 추가)
+      const googleFormUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform?usp=pp_url&${formData.toString()}`
 
       // 새 창에서 구글폼 열기
       window.open(googleFormUrl, "_blank", "width=800,height=600")
 
       toast({
         title: "오류 신고 페이지가 열렸습니다",
-        description: "새 창에서 구글폼을 작성해주세요. 소중한 의견 감사합니다.",
+        description: "새 창에서 구글폼을 작성해주세요. 입력한 정보가 미리 채워져 있습니다.",
       })
 
       onClose()
@@ -139,6 +145,13 @@ export default function ErrorReportModal({ isOpen, onClose, destination, searchP
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">{description.length}/500자</p>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-700 text-sm">
+                <ExternalLink className="h-4 w-4" />
+                <span>새 창에서 구글폼이 열리며, 입력한 정보가 미리 채워집니다.</span>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">

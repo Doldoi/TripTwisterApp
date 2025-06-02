@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Trip Twister - 랜덤 여행지 추천",
-  description: "조건에 맞는 국내 여행지를 랜덤으로 추천해드리는 Trip Twister",
+  description: "조건에 맞는 국내 여행지를 랜덤으로 추천해드리는 Trip Twister입니다.",
 }
 
 export default function Home() {
