@@ -10,7 +10,7 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
     const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
 
     let query = supabase
-      .from("destinations")
+      .from("datatable")
       .select("*")
       .eq("departure_location", location)
       .gte(timeColumn, minTravelTime)
