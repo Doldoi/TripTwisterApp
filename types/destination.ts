@@ -4,7 +4,7 @@ export interface Destination {
   address: string
   image: string
   cluster: number
-  출발지: string
+  departure_location: string
   drive_time: number
   transit_time: number
   description?: string

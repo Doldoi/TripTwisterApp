@@ -103,7 +103,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
 
   // 이동시간 표시
   const travelTime =
-    searchParams.transportMode === "car" ? currentDestination.drive_time : currentDestination.transit_time
+    searchParams.transportMode === "car" ? currentDestination.drive_time : currentDestination.drive_time
 
   return (
     <motion.div

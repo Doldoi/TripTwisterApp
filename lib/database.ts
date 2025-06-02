@@ -18,10 +18,10 @@ try {
   )
 
   // 출발지 값 확인
-  const locations = db.prepare("SELECT DISTINCT 출발지 FROM datatable").all()
+  const locations = db.prepare("SELECT DISTINCT departure_location FROM datatable").all()
   console.log(
     "사용 가능한 출발지:",
-    locations.map((loc: any) => loc.출발지),
+    locations.map((loc: any) => loc.departure_location),
   )
 } catch (error) {
   console.error("데이터베이스 연결 오류:", error)
@@ -39,11 +39,11 @@ export function getDestinationByParams(params: SearchParams): Destination | null
     console.log("검색 조건:", { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju })
 
     // 교통수단에 따른 시간 컬럼 선택
-    const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
+    const timeColumn = transportMode === "car" ? "drive_time" : "drive_time"
 
     let query = `
       SELECT rowid, * FROM datatable 
-      WHERE 출발지 = ? 
+      WHERE departure_location = ? 
       AND ${timeColumn} >= ? 
       AND ${timeColumn} <= ?
       AND ${timeColumn} IS NOT NULL
@@ -81,7 +81,7 @@ export function getDestinationByParams(params: SearchParams): Destination | null
       address: result.address,
       image: result.image,
       cluster: result.cluster,
-      출발지: result.출발지,
+      departure_location: result.departure_location,
       drive_time: result.drive_time,
       transit_time: result.transit_time,
       description: result.description,
