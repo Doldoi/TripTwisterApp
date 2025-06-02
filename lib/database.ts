@@ -12,7 +12,7 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
     let query = supabase
       .from("destinations")
       .select("*")
-      .eq("출발지", location)
+      .eq("departure_location", location)
       .gte(timeColumn, minTravelTime)
       .lte(timeColumn, maxTravelTime)
       .not(timeColumn, "is", null)
