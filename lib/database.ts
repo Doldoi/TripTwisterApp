@@ -18,10 +18,9 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
       .not(timeColumn, "is", null)
 
     // 제주도 제외 조건
-    // if (excludeJeju === true || excludeJeju === "true") {
-    //   query = query.eq("is_jeju", false)
-    // }
-    excludeJeju: true
+    if (excludeJeju === true || excludeJeju === "true") {
+      query = query.eq("is_jeju", false)
+    }
 
     // 제외할 ID 조건
     if (excludeId) {
