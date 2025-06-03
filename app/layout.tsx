@@ -39,11 +39,9 @@ export default function RootLayout({
         />
         <Script id="kakao-init" strategy="afterInteractive">
           {`
-            console.log('카카오 키:', '${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}');
             if (typeof window !== 'undefined' && window.Kakao && !window.Kakao.isInitialized()) {
               try {
                 window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}');
-                console.log('카카오 SDK 초기화 성공');
               } catch (error) {
                 console.error('카카오 SDK 초기화 실패:', error);
               }

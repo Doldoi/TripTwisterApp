@@ -26,12 +26,13 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleCopyUrl = () => {
-    console.log("destinationId:", destinationId) // 디버깅 로그 추가
+    console.log("URL 복사 destinationId:", destinationId) // 디버깅용
 
+    // destinationId가 유효한지 확인
     if (!destinationId || destinationId === "undefined") {
       toast({
         title: "오류가 발생했습니다",
-        description: "여행지 정보를 불러올 수 없습니다.",
+        description: "여행지 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive",
       })
       return
@@ -41,7 +42,11 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
     const currentUrl = new URL(window.location.href)
     // destinationId 추가
     currentUrl.searchParams.set("destinationId", destinationId)
-    navigator.clipboard.writeText(currentUrl.toString())
+
+    const shareUrl = currentUrl.toString()
+    console.log("복사될 URL:", shareUrl) // 디버깅용
+
+    navigator.clipboard.writeText(shareUrl)
     toast({
       title: "URL이 복사되었습니다",
       description: "친구에게 공유할 수 있습니다.",
@@ -49,12 +54,13 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleKakaoShare = () => {
-    console.log("카카오 공유 destinationId:", destinationId) // 디버깅 로그 추가
+    console.log("카카오톡 공유 destinationId:", destinationId) // 디버깅용
 
+    // destinationId가 유효한지 확인
     if (!destinationId || destinationId === "undefined") {
       toast({
         title: "오류가 발생했습니다",
-        description: "여행지 정보를 불러올 수 없습니다.",
+        description: "여행지 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
         variant: "destructive",
       })
       return
@@ -62,23 +68,25 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
 
     if (window.Kakao && window.Kakao.Share) {
       try {
+        const shareUrl = `${window.location.origin}/result?destinationId=${destinationId}`
+
         window.Kakao.Share.sendDefault({
           objectType: "feed",
           content: {
             title: title,
             description: `Trip Twister에서 ${destinationName}을(를) 추천받았어요!`,
-            imageUrl: `${window.location.origin}/images/share-image.png`, // 공유용 이미지 경로
+            imageUrl: `${window.location.origin}/images/share-image.png`,
             link: {
-              mobileWebUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
-              webUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
             },
           },
           buttons: [
             {
               title: "여행지 확인하기",
               link: {
-                mobileWebUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
-                webUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
+                mobileWebUrl: shareUrl,
+                webUrl: shareUrl,
               },
             },
           ],
