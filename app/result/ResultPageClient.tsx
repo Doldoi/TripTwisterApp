@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import TripResult from "@/components/trip-result"
-import TripResultSkeleton from "@/components/trip-result-skeleton"
 import type { Destination } from "@/types/destination"
 
 export default function ResultPageClient({
@@ -32,7 +31,6 @@ export default function ResultPageClient({
 
     // destinationId가 있으면 해당 여행지만 조회
     if (destinationId && destinationId !== "undefined") {
-
       const fetchSpecificDestination = async () => {
         try {
           setLoading(true)
@@ -56,7 +54,6 @@ export default function ResultPageClient({
             setDestination(result.destination)
           }
         } catch (error: any) {
-          console.error("특정 여행지 조회 오류:", error)
           setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
         } finally {
           setLoading(false)
@@ -99,12 +96,11 @@ export default function ResultPageClient({
         }
 
         if (!result.destination) {
-          setError("조건에 맞는 여행지가 없습니다. 다른 조건으로 시도해보세요.")
+          setError("조건에 맞는 여행지가 없습니다.")
         } else {
           setDestination(result.destination)
         }
       } catch (error: any) {
-        console.error("여행지 검색 오류:", error)
         setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
       } finally {
         setLoading(false)
@@ -116,6 +112,17 @@ export default function ResultPageClient({
 
   // 검색 파라미터를 URL로 변환
   const searchParamsString = new URLSearchParams(searchParams as Record<string, string>).toString()
+
+  // 에러 메시지에 따른 안내 문구 생성
+  const getErrorGuidance = (errorMessage: string) => {
+    if (errorMessage.includes("조건에 맞는 여행지가 없습니다")) {
+      return "이동시간을 늘리거나 다른 출발지를 선택해보세요."
+    } else if (errorMessage.includes("해당 여행지를 찾을 수 없습니다")) {
+      return "공유받은 링크가 만료되었거나 잘못된 링크일 수 있습니다."
+    } else {
+      return "잠시 후 다시 시도하거나 조건을 변경해보세요."
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-blue-50">
@@ -130,7 +137,12 @@ export default function ResultPageClient({
           </Link>
 
           {loading ? (
-            <TripResultSkeleton />
+            <div className="bg-white rounded-xl shadow-xl p-8 text-center">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p className="text-gray-600">여행지를 찾고 있습니다...</p>
+              </div>
+            </div>
           ) : error ? (
             <div className="bg-white rounded-lg shadow-lg p-8 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -144,13 +156,8 @@ export default function ResultPageClient({
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">여행지를 찾을 수 없습니다</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-              {/* {apiResponse && (
-                <div className="mb-6 text-left bg-gray-50 p-4 rounded-lg overflow-auto max-h-40">
-                  <p className="text-xs text-gray-500 mb-2">디버깅 정보:</p>
-                  <pre className="text-xs">{JSON.stringify(apiResponse, null, 2)}</pre>
-                </div>
-              )} */}
+              <p className="text-gray-600 mb-2">{error}</p>
+              <p className="text-sm text-gray-500 mb-6">{getErrorGuidance(error)}</p>
               <button
                 onClick={() => router.push("/")}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -173,13 +180,8 @@ export default function ResultPageClient({
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">여행지를 찾을 수 없습니다</h2>
-              <p className="text-gray-600 mb-6">조건에 맞는 여행지가 없습니다. 조건을 변경해보세요.</p>
-              {apiResponse && (
-                <div className="mb-6 text-left bg-gray-50 p-4 rounded-lg overflow-auto max-h-40">
-                  <p className="text-xs text-gray-500 mb-2">디버깅 정보:</p>
-                  <pre className="text-xs">{JSON.stringify(apiResponse, null, 2)}</pre>
-                </div>
-              )}
+              <p className="text-gray-600 mb-2">조건에 맞는 여행지가 없습니다.</p>
+              <p className="text-sm text-gray-500 mb-6">이동시간을 늘리거나 다른 출발지를 선택해보세요.</p>
               <button
                 onClick={() => router.push("/")}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
