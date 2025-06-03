@@ -26,7 +26,6 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleCopyUrl = () => {
-    console.log("URL 복사 destinationId:", destinationId) // 디버깅용
 
     // destinationId가 유효한지 확인
     if (!destinationId || destinationId === "undefined") {
@@ -44,7 +43,6 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
     currentUrl.searchParams.set("destinationId", destinationId)
 
     const shareUrl = currentUrl.toString()
-    console.log("복사될 URL:", shareUrl) // 디버깅용
 
     navigator.clipboard.writeText(shareUrl)
     toast({
@@ -54,7 +52,6 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleKakaoShare = () => {
-    console.log("카카오톡 공유 destinationId:", destinationId) // 디버깅용
 
     // destinationId가 유효한지 확인
     if (!destinationId || destinationId === "undefined") {

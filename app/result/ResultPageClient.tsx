@@ -17,7 +17,7 @@ export default function ResultPageClient({
   const [destination, setDestination] = useState<Destination | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [apiResponse, setApiResponse] = useState<any>(null)
+  // const [apiResponse, setApiResponse] = useState<any>(null)
 
   useEffect(() => {
     // 페이지 로드 시 스크롤 위치를 상단으로 설정
@@ -33,7 +33,6 @@ export default function ResultPageClient({
 
     // destinationId가 있으면 해당 여행지만 조회
     if (destinationId && destinationId !== "undefined") {
-      console.log("특정 여행지 조회:", destinationId)
 
       const fetchSpecificDestination = async () => {
         try {
@@ -72,7 +71,6 @@ export default function ResultPageClient({
 
     // destinationId가 없으면 기존 랜덤 검색 로직
     if (!location || !minTravelTime || !maxTravelTime || !transportMode) {
-      console.log("필수 파라미터 누락, 홈으로 리다이렉트")
       router.push("/")
       return
     }
@@ -88,8 +86,6 @@ export default function ResultPageClient({
           excludeJeju: searchParams.excludeJeju as string,
         }
 
-        console.log("랜덤 검색 API 요청 파라미터:", params)
-
         const response = await fetch("/api/destinations", {
           method: "POST",
           headers: {
@@ -101,7 +97,6 @@ export default function ResultPageClient({
         const result = await response.json()
         setApiResponse(result)
 
-        console.log("API 응답 결과:", result)
 
         if (!response.ok) {
           throw new Error(result.error || "여행지 검색 실패")
@@ -154,12 +149,12 @@ export default function ResultPageClient({
               </div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">여행지를 찾을 수 없습니다</h2>
               <p className="text-gray-600 mb-6">{error}</p>
-              {apiResponse && (
+              {/* {apiResponse && (
                 <div className="mb-6 text-left bg-gray-50 p-4 rounded-lg overflow-auto max-h-40">
                   <p className="text-xs text-gray-500 mb-2">디버깅 정보:</p>
                   <pre className="text-xs">{JSON.stringify(apiResponse, null, 2)}</pre>
                 </div>
-              )}
+              )} */}
               <button
                 onClick={() => router.push("/")}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"

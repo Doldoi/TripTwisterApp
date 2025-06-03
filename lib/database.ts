@@ -4,7 +4,6 @@ import type { Destination, SearchParams } from "@/types/destination"
 export async function getDestinationByParams(params: SearchParams): Promise<Destination | null> {
   try {
     const { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju } = params
-    console.log("검색 조건:", { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju })
 
     // 교통수단에 따른 시간 컬럼 선택
     const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
@@ -27,11 +26,9 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
       }
 
       if (!data || data.length === 0) {
-        console.log("조건에 맞는 여행지가 없습니다")
         return null
       }
 
-      console.log("총 검색된 여행지 수:", data.length)
 
       // 클러스터별로 그룹화
       const destinationsByCluster = groupByCluster(data)
@@ -80,13 +77,8 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
       const allData = [...(nonJejuData || []), ...(jejuData || [])]
 
       if (!allData || allData.length === 0) {
-        console.log("조건에 맞는 여행지가 없습니다")
         return null
       }
-
-      console.log("총 검색된 여행지 수:", allData.length)
-      console.log("제주도 외 여행지 수:", nonJejuData?.length || 0)
-      console.log("제주도 여행지 수 (제한됨):", jejuData?.length || 0)
 
       // 클러스터별로 그룹화
       const destinationsByCluster = groupByCluster(allData)
@@ -119,16 +111,6 @@ function groupByCluster(destinations: any[]): Record<string, any[]> {
   )
 }
 
-// 클러스터별 분포 로깅
-function logClusterDistribution(destinationsByCluster: Record<string, any[]>) {
-  console.log(
-    "클러스터별 분포:",
-    Object.entries(destinationsByCluster)
-      .map(([cluster, destinations]) => `${cluster}: ${destinations.length}개`)
-      .join(", "),
-  )
-}
-
 // 클러스터 기반 랜덤 선택
 function selectRandomDestinationByCluster(destinationsByCluster: Record<string, any[]>): Destination {
   // 클러스터 목록
@@ -142,9 +124,6 @@ function selectRandomDestinationByCluster(destinationsByCluster: Record<string, 
   const clusterDestinations = destinationsByCluster[selectedCluster]
   const randomDestinationIndex = Math.floor(Math.random() * clusterDestinations.length)
   const result = clusterDestinations[randomDestinationIndex]
-
-  console.log("선택된 클러스터:", selectedCluster)
-  console.log("선택된 여행지:", result.name)
 
   return {
     id: result.id,
@@ -162,17 +141,11 @@ function selectRandomDestinationByCluster(destinationsByCluster: Record<string, 
 // 특정 ID로 여행지 조회하는 함수 추가
 export async function getDestinationById(id: string): Promise<Destination | null> {
   try {
-    console.log("ID로 여행지 조회:", id)
 
     const { data, error } = await supabase.from("datatable").select("*").eq("id", id).single()
 
     if (error) {
       console.error("Supabase ID 조회 오류:", error)
-      return null
-    }
-
-    if (!data) {
-      console.log("해당 ID의 여행지가 없습니다")
       return null
     }
 

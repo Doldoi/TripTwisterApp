@@ -5,12 +5,10 @@ import type { SearchParams } from "@/types/destination"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log("API 요청 받음:", body)
 
     // destinationId가 있으면 해당 여행지를 직접 조회
     if (body.destinationId) {
       const destination = await getDestinationById(body.destinationId)
-      console.log("특정 여행지 조회:", destination ? "여행지 찾음" : "여행지 없음")
       return NextResponse.json({ destination })
     }
 
@@ -24,7 +22,6 @@ export async function POST(request: NextRequest) {
     }
 
     const destination = await getDestinationByParams(params)
-    console.log("API 응답:", destination ? "여행지 찾음" : "여행지 없음")
 
     return NextResponse.json({ destination })
   } catch (error) {
