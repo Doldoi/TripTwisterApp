@@ -253,7 +253,18 @@ export default function TripResult({ destination, searchParams }: TripResultProp
               <Share2 className="h-5 w-5 text-blue-600" />
               <span>친구에게 공유하기</span>
             </h3>
-            <ShareButtons title="Trip Twister - 랜덤 여행지 추천" destinationName={currentDestination.name} />
+            {/* 디버깅용 - 나중에 제거 */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="mb-4 p-2 bg-yellow-100 text-xs">
+                <p>디버깅: destinationId = {currentDestination.id}</p>
+                <p>디버깅: destinationName = {currentDestination.name}</p>
+              </div>
+            )}
+            <ShareButtons
+              title="Trip Twister - 랜덤 여행지 추천"
+              destinationName={currentDestination.name}
+              destinationId={currentDestination.id?.toString() || ""}
+            />
           </div>
         </div>
       </Card>

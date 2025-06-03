@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Trip Twister - 랜덤 여행지 추천",
     description: "조건에 맞는 국내 여행지를 랜덤으로 추천해드리는 Trip Twister",
     type: "website",
-  }
+  },
 }
 
 export default function RootLayout({
@@ -37,10 +37,16 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
-        <Script id="kakao-init">
+        <Script id="kakao-init" strategy="afterInteractive">
           {`
-            if (window.Kakao && !window.Kakao.isInitialized()) {
-              window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}');
+            console.log('카카오 키:', '${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}');
+            if (typeof window !== 'undefined' && window.Kakao && !window.Kakao.isInitialized()) {
+              try {
+                window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}');
+                console.log('카카오 SDK 초기화 성공');
+              } catch (error) {
+                console.error('카카오 SDK 초기화 실패:', error);
+              }
             }
           `}
         </Script>

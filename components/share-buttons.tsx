@@ -26,6 +26,17 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleCopyUrl = () => {
+    console.log("destinationId:", destinationId) // 디버깅 로그 추가
+
+    if (!destinationId || destinationId === "undefined") {
+      toast({
+        title: "오류가 발생했습니다",
+        description: "여행지 정보를 불러올 수 없습니다.",
+        variant: "destructive",
+      })
+      return
+    }
+
     // 현재 URL에서 쿼리 파라미터 가져오기
     const currentUrl = new URL(window.location.href)
     // destinationId 추가
@@ -38,6 +49,17 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleKakaoShare = () => {
+    console.log("카카오 공유 destinationId:", destinationId) // 디버깅 로그 추가
+
+    if (!destinationId || destinationId === "undefined") {
+      toast({
+        title: "오류가 발생했습니다",
+        description: "여행지 정보를 불러올 수 없습니다.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (window.Kakao && window.Kakao.Share) {
       try {
         window.Kakao.Share.sendDefault({
