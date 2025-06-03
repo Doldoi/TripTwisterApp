@@ -25,12 +25,52 @@ export default function ResultPageClient({
   }, [])
 
   useEffect(() => {
-    // searchParams 유효성 검사 - 필수 파라미터가 없으면 홈으로 리다이렉트
+    const destinationId = searchParams.destinationId as string
     const location = searchParams.location as string
     const minTravelTime = searchParams.minTravelTime as string
     const maxTravelTime = searchParams.maxTravelTime as string
     const transportMode = searchParams.transportMode as string
 
+    // destinationId가 있으면 해당 여행지만 조회
+    if (destinationId && destinationId !== "undefined") {
+      console.log("특정 여행지 조회:", destinationId)
+
+      const fetchSpecificDestination = async () => {
+        try {
+          setLoading(true)
+          const response = await fetch("/api/destinations", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ destinationId }),
+          })
+
+          const result = await response.json()
+          setApiResponse(result)
+
+          if (!response.ok) {
+            throw new Error(result.error || "여행지 검색 실패")
+          }
+
+          if (!result.destination) {
+            setError("해당 여행지를 찾을 수 없습니다.")
+          } else {
+            setDestination(result.destination)
+          }
+        } catch (error: any) {
+          console.error("특정 여행지 조회 오류:", error)
+          setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      fetchSpecificDestination()
+      return
+    }
+
+    // destinationId가 없으면 기존 랜덤 검색 로직
     if (!location || !minTravelTime || !maxTravelTime || !transportMode) {
       console.log("필수 파라미터 누락, 홈으로 리다이렉트")
       router.push("/")
@@ -48,7 +88,7 @@ export default function ResultPageClient({
           excludeJeju: searchParams.excludeJeju as string,
         }
 
-        console.log("API 요청 파라미터:", params)
+        console.log("랜덤 검색 API 요청 파라미터:", params)
 
         const response = await fetch("/api/destinations", {
           method: "POST",
@@ -59,7 +99,7 @@ export default function ResultPageClient({
         })
 
         const result = await response.json()
-        setApiResponse(result) // 디버깅용 API 응답 저장
+        setApiResponse(result)
 
         console.log("API 응답 결과:", result)
 
@@ -82,16 +122,6 @@ export default function ResultPageClient({
 
     fetchDestination()
   }, [searchParams, router])
-
-  // 필수 파라미터가 없으면 아무것도 렌더링하지 않음
-  const location = searchParams.location as string
-  const minTravelTime = searchParams.minTravelTime as string
-  const maxTravelTime = searchParams.maxTravelTime as string
-  const transportMode = searchParams.transportMode as string
-
-  if (!location || !minTravelTime || !maxTravelTime || !transportMode) {
-    return null
-  }
 
   // 검색 파라미터를 URL로 변환
   const searchParamsString = new URLSearchParams(searchParams as Record<string, string>).toString()
