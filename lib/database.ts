@@ -17,8 +17,59 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
     const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
     console.log("사용할 시간 컬럼:", timeColumn)
 
+    // 먼저 전체 데이터 확인
+    const { data: allData, error: allError } = await supabase
+      .from("datatable")
+      .select("*")
+      .eq("departure_location", location)
+      .limit(5)
+
+    console.log("=== 전체 데이터 샘플 (최대 5개) ===")
+    console.log("전체 데이터 조회 에러:", allError)
+    console.log("전체 데이터 샘플:", allData)
+    if (allData && allData.length > 0) {
+      console.log("첫 번째 데이터 예시:", allData[0])
+      console.log("사용 가능한 컬럼들:", Object.keys(allData[0]))
+    }
+
     // 제주도 제외 옵션이 켜져 있으면 제주도 데이터 제외
     if (excludeJeju === true || excludeJeju === "true") {
+      console.log("=== 제주도 제외 모드 ===")
+
+      // 단계별로 쿼리 확인
+      console.log("1단계: 출발지만 필터링")
+      const { data: step1, error: step1Error } = await supabase
+        .from("datatable")
+        .select("*")
+        .eq("departure_location", location)
+
+      console.log("1단계 결과:", { count: step1?.length, error: step1Error })
+
+      console.log("2단계: 시간 컬럼 null 제외")
+      const { data: step2, error: step2Error } = await supabase
+        .from("datatable")
+        .select("*")
+        .eq("departure_location", location)
+        .not(timeColumn, "is", null)
+
+      console.log("2단계 결과:", { count: step2?.length, error: step2Error })
+
+      console.log("3단계: 시간 범위 필터링")
+      const { data: step3, error: step3Error } = await supabase
+        .from("datatable")
+        .select("*")
+        .eq("departure_location", location)
+        .not(timeColumn, "is", null)
+        .gte(timeColumn, minTravelTime)
+        .lte(timeColumn, maxTravelTime)
+
+      console.log("3단계 결과:", { count: step3?.length, error: step3Error })
+      if (step3 && step3.length > 0) {
+        console.log("시간 범위 내 데이터 예시:", step3[0])
+        console.log(`${timeColumn} 값들:`, step3.map((d) => d[timeColumn]).slice(0, 10))
+      }
+
+      console.log("4단계: 제주도 제외")
       const { data, error } = await supabase
         .from("datatable")
         .select("*")
@@ -29,7 +80,7 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
         .neq("cluster", "100") // 제주도 클러스터 제외
         .not("address", "ilike", "%제주%") // 주소에 제주가 포함된 데이터 제외
 
-      console.log("Supabase 쿼리 결과:", { data: data?.length, error })
+      console.log("최종 쿼리 결과:", { data: data?.length, error })
 
       if (error) {
         console.error("Supabase 조회 오류:", error)
@@ -52,8 +103,9 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
       // 클러스터 기반 랜덤 선택
       return selectRandomDestinationByCluster(destinationsByCluster)
     }
-    // 제주도 포함 옵션일 경우 - 클러스터별 균등 선택 + 제주도 제한
+    // 제주도 포함 옵션일 경우
     else {
+      console.log("=== 제주도 포함 모드 ===")
       // 1. 제주도 외 여행지 조회
       const { data: nonJejuData, error: nonJejuError } = await supabase
         .from("datatable")
