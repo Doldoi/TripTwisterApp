@@ -48,7 +48,7 @@ export default function ErrorReportModal({ isOpen, onClose, destination, searchP
       // 구글폼 설정
       const GOOGLE_FORM_ID = "1FAIpQLSdHm45LGMnP8nzEXszEbF_hvsHgR5Mnitry-o1hyJujMnMI0Q"
 
-      // 구글폼 필드 entry ID들 (실제 구글폼에서 확인한 값들)
+      // 구글폼 필드 entry ID
       const formData = new URLSearchParams({
         // 기본 필드들
         "entry.1598684535": destination.name, // 여행지명
