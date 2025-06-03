@@ -45,7 +45,11 @@ export default function TripForm() {
   }
 
   const handleSubmit = () => {
+    console.log("=== 폼 제출 시작 ===")
+    console.log("선택된 출발지:", selectedLocation)
+
     if (!selectedLocation) {
+      console.log("출발지가 선택되지 않음")
       toast({
         title: "출발지를 선택해주세요",
         description: "여행을 시작할 지역을 먼저 선택해주세요.",
@@ -54,10 +58,12 @@ export default function TripForm() {
       return
     }
 
+    console.log("카운트다운 시작")
     setShowCountdown(true)
   }
 
   const handleCountdownComplete = () => {
+    console.log("=== 카운트다운 완료 ===")
     const params = new URLSearchParams({
       location: selectedLocation,
       minTravelTime: "0",
@@ -65,6 +71,9 @@ export default function TripForm() {
       transportMode,
       excludeJeju: excludeJeju.toString(),
     })
+
+    console.log("생성된 파라미터:", params.toString())
+    console.log("이동할 URL:", `/result?${params.toString()}`)
 
     router.push(`/result?${params.toString()}`)
   }
