@@ -1,11 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getDestinationByParams } from "@/lib/database"
+import { getDestinationByParams, getDestinationById } from "@/lib/database"
 import type { SearchParams } from "@/types/destination"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     console.log("API 요청 받음:", body)
+
+    // destinationId가 있으면 해당 여행지를 직접 조회
+    if (body.destinationId) {
+      const destination = await getDestinationById(body.destinationId)
+      console.log("특정 여행지 조회:", destination ? "여행지 찾음" : "여행지 없음")
+      return NextResponse.json({ destination })
+    }
 
     const params: SearchParams = {
       location: body.location,

@@ -62,6 +62,40 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
   }
 }
 
+// 특정 ID로 여행지 조회하는 함수 추가
+export async function getDestinationById(id: string): Promise<Destination | null> {
+  try {
+    console.log("ID로 여행지 조회:", id)
+
+    const { data, error } = await supabase.from("datatable").select("*").eq("id", id).single()
+
+    if (error) {
+      console.error("Supabase ID 조회 오류:", error)
+      return null
+    }
+
+    if (!data) {
+      console.log("해당 ID의 여행지가 없습니다")
+      return null
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      address: data.address,
+      image: data.image,
+      cluster: data.cluster,
+      departure_location: data.departure_location,
+      drive_time: data.drive_time,
+      transit_time: data.transit_time,
+      description: data.description,
+    }
+  } catch (error) {
+    console.error("ID로 여행지 조회 오류:", error)
+    return null
+  }
+}
+
 export function closeDatabase() {
   // Supabase는 자동으로 연결 관리하므로 불필요
 }
