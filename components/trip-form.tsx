@@ -35,7 +35,7 @@ export default function TripForm() {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const [travelTime, setTravelTime] = useState([2])
   const [transportMode, setTransportMode] = useState<"publicTransport" | "car">("publicTransport")
-  const [excludeJeju, setExcludeJeju] = useState(false)
+  const [excludeJeju, setExcludeJeju] = useState(true) // 기본값을 true로 변경
   const [showCountdown, setShowCountdown] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
@@ -147,12 +147,10 @@ export default function TripForm() {
                 htmlFor="excludeJeju"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                제주도 여행지 제외하기
+                제주도 여행지 제외하기 (권장)
               </label>
             </div>
-            <p className="text-xs text-gray-500 mt-2 ml-6">
-              추천 결과에서 제주도 여행지를 제외하시려면 체크해주세요
-            </p>
+            <p className="text-xs text-gray-500 mt-2 ml-6">더 다양한 지역의 여행지를 추천받으려면 체크해주세요</p>
           </div>
 
           {/* 추천 받기 버튼 */}
