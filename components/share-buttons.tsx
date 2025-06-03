@@ -59,14 +59,14 @@ export default function ShareButtons({ title, destinationName }: ShareButtonsPro
       } catch (error) {
         console.error("카카오톡 공유 에러:", error)
         // 카카오 SDK 초기화 실패 시 대체 방법으로 URL 열기
-        const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=@카카오앱키입력@&text=${encodeURIComponent(
+        const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
           `Trip Twister - ${destinationName} 여행지 추천`,
         )}&url=${encodeURIComponent(window.location.href)}`
         window.open(kakaoShareUrl, "_blank")
       }
     } else {
       // 카카오 SDK가 로드되지 않은 경우 대체 방법으로 URL 열기
-      const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=@카카오앱키입력@&text=${encodeURIComponent(
+      const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
         `Trip Twister - ${destinationName} 여행지 추천`,
       )}&url=${encodeURIComponent(window.location.href)}`
       window.open(kakaoShareUrl, "_blank")

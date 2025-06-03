@@ -41,7 +41,7 @@ export default function RootLayout({
         <Script id="kakao-init">
           {`
             if (window.Kakao && !window.Kakao.isInitialized()) {
-              window.Kakao.init('@카카오자바스크립트키입력@'); // 실제 카카오 JavaScript 앱 키로 교체
+              window.Kakao.init('aefd50bbd20afac1e5fa54e91d113d40'); // 실제 카카오 JavaScript 앱 키로 교체
             }
           `}
         </Script>
