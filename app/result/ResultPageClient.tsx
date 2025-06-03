@@ -17,7 +17,6 @@ export default function ResultPageClient({
   const [destination, setDestination] = useState<Destination | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  // const [apiResponse, setApiResponse] = useState<any>(null)
 
   useEffect(() => {
     // 페이지 로드 시 스크롤 위치를 상단으로 설정
@@ -46,7 +45,6 @@ export default function ResultPageClient({
           })
 
           const result = await response.json()
-          setApiResponse(result)
 
           if (!response.ok) {
             throw new Error(result.error || "여행지 검색 실패")
@@ -95,8 +93,6 @@ export default function ResultPageClient({
         })
 
         const result = await response.json()
-        setApiResponse(result)
-
 
         if (!response.ok) {
           throw new Error(result.error || "여행지 검색 실패")
