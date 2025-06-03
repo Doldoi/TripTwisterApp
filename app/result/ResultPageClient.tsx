@@ -116,21 +116,28 @@ export default function ResultPageClient({
 
         console.log("API 응답 상태:", response.status)
         const result = await response.json()
-        console.log("API 응답 결과:", result)
+        console.log("API 응답 결과 전체:", result)
+        console.log("result.destination:", result.destination)
+        console.log("destination 타입:", typeof result.destination)
+        console.log("destination이 null인가?", result.destination === null)
+        console.log("destination이 undefined인가?", result.destination === undefined)
 
         if (!response.ok) {
           throw new Error(result.error || "여행지 검색 실패")
         }
 
         if (!result.destination) {
+          console.log("조건에 맞는 여행지가 없습니다.")
           setError("조건에 맞는 여행지가 없습니다.")
         } else {
+          console.log("여행지 설정:", result.destination)
           setDestination(result.destination)
         }
       } catch (error: any) {
         console.error("랜덤 검색 에러:", error)
         setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
       } finally {
+        console.log("로딩 완료")
         setLoading(false)
       }
     }
@@ -151,6 +158,11 @@ export default function ResultPageClient({
       return "잠시 후 다시 시도하거나 조건을 변경해보세요."
     }
   }
+
+  console.log("=== 렌더링 상태 ===")
+  console.log("loading:", loading)
+  console.log("error:", error)
+  console.log("destination:", destination)
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-blue-50">
