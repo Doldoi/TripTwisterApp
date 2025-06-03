@@ -5,8 +5,17 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
   try {
     const { location, minTravelTime, maxTravelTime, transportMode, excludeId, excludeJeju } = params
 
+    console.log("=== 검색 파라미터 ===")
+    console.log("출발지:", location)
+    console.log("최소 이동시간:", minTravelTime)
+    console.log("최대 이동시간:", maxTravelTime)
+    console.log("교통수단:", transportMode)
+    console.log("제주도 제외:", excludeJeju)
+    console.log("==================")
+
     // 교통수단에 따른 시간 컬럼 선택
     const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
+    console.log("사용할 시간 컬럼:", timeColumn)
 
     // 제주도 제외 옵션이 켜져 있으면 제주도 데이터 제외
     if (excludeJeju === true || excludeJeju === "true") {
@@ -20,15 +29,19 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
         .neq("cluster", "100") // 제주도 클러스터 제외
         .not("address", "ilike", "%제주%") // 주소에 제주가 포함된 데이터 제외
 
+      console.log("Supabase 쿼리 결과:", { data: data?.length, error })
+
       if (error) {
         console.error("Supabase 조회 오류:", error)
         return null
       }
 
       if (!data || data.length === 0) {
+        console.log("조건에 맞는 데이터가 없습니다.")
         return null
       }
 
+      console.log(`총 ${data.length}개의 여행지를 찾았습니다.`)
 
       // 클러스터별로 그룹화
       const destinationsByCluster = groupByCluster(data)
@@ -138,10 +151,18 @@ function selectRandomDestinationByCluster(destinationsByCluster: Record<string, 
   }
 }
 
+// 클러스터별 여행지 수 로깅 함수 추가
+function logClusterDistribution(destinationsByCluster: Record<string, any[]>): void {
+  console.log("=== 클러스터별 여행지 분포 ===")
+  Object.entries(destinationsByCluster).forEach(([cluster, destinations]) => {
+    console.log(`클러스터 ${cluster}: ${destinations.length}개`)
+  })
+  console.log("==============================")
+}
+
 // 특정 ID로 여행지 조회하는 함수 추가
 export async function getDestinationById(id: string): Promise<Destination | null> {
   try {
-
     const { data, error } = await supabase.from("datatable").select("*").eq("id", id).single()
 
     if (error) {
