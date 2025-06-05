@@ -21,11 +21,19 @@ export default function TripResult({ destination, searchParams }: TripResultProp
   const [error, setError] = useState<string | null>(null)
   const [showErrorReport, setShowErrorReport] = useState(false)
   const [currentDestination, setCurrentDestination] = useState<Destination>(destination)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  // destination이 변경될 때마다 currentDestination 업데이트
+  useEffect(() => {
+    setCurrentDestination(destination)
+    setImageError(false) // 새 여행지로 변경될 때 이미지 에러 상태 초기화
+  }, [destination])
 
   // 안전 처리 추가 - destination이 없을 때
   if (!destination) {
@@ -55,6 +63,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
 
   const handleTryAgain = async () => {
     setLoading(true)
+    setImageLoading(true) // 이미지 로딩 상태 시작
     try {
       const params = {
         location: searchParams.location as string,
@@ -89,12 +98,13 @@ export default function TripResult({ destination, searchParams }: TripResultProp
       } else {
         setCurrentDestination(result.destination)
         setError(null)
+        setImageError(false) // 새 여행지 설정 시 이미지 에러 상태 초기화
       }
     } catch (err) {
-      console.error("여행지 재검색 오류:", err)
       setError("여행지를 불러오는 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
+      setImageLoading(false) // 이미지 로딩 상태 종료
     }
   }
 
@@ -105,8 +115,20 @@ export default function TripResult({ destination, searchParams }: TripResultProp
   const travelTime =
     searchParams.transportMode === "car" ? currentDestination.drive_time : currentDestination.transit_time
 
+  // 이미지 URL에 캐시 방지를 위한 파라미터 추가
+  const getImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) {
+      return `/placeholder.svg?height=400&width=600&text=여행지 이미지&id=${currentDestination.id}`
+    }
+
+    // 이미지 URL에 destination ID를 파라미터로 추가하여 캐시 방지
+    const separator = imageUrl.includes("?") ? "&" : "?"
+    return `${imageUrl}${separator}v=${currentDestination.id}`
+  }
+
   return (
     <motion.div
+      key={currentDestination.id} // 여행지가 바뀔 때마다 컴포넌트 리렌더링 강제
       initial={{ opacity: 0, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -114,13 +136,31 @@ export default function TripResult({ destination, searchParams }: TripResultProp
     >
       <Card className="overflow-hidden bg-white shadow-xl rounded-xl border-0">
         <div className="relative h-72 md:h-96">
+          {imageLoading && (
+            <div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          )}
+
           <Image
-            src={currentDestination.image || "/placeholder.svg?height=400&width=600&text=여행지 이미지"}
+            key={`${currentDestination.id}-${Date.now()}`} // 강제 리렌더링을 위한 unique key
+            src={
+              imageError
+                ? `/placeholder.svg?height=400&width=600&text=이미지 로딩 실패&id=${currentDestination.id}`
+                : getImageUrl(currentDestination.image)
+            }
             alt={`${currentDestination.name} 여행지 이미지`}
             fill
             className="object-cover"
-            priority
+            priority={false} // priority를 false로 설정하여 캐싱 이슈 방지
+            unoptimized={true} // 이미지 최적화 비활성화로 캐싱 문제 해결
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageError(true)
+              setImageLoading(false)
+            }}
           />
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-sm">{currentDestination.name}</h2>
@@ -253,17 +293,10 @@ export default function TripResult({ destination, searchParams }: TripResultProp
               <Share2 className="h-5 w-5 text-blue-600" />
               <span>친구에게 공유하기</span>
             </h3>
-            {/* 디버깅용 - 나중에 제거 */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="mb-4 p-2 bg-yellow-100 text-xs">
-                <p>디버깅: destinationId = {currentDestination.id}</p>
-                <p>디버깅: destinationName = {currentDestination.name}</p>
-              </div>
-            )}
             <ShareButtons
               title="Trip Twister - 랜덤 여행지 추천"
               destinationName={currentDestination.name}
-              destinationId={currentDestination.id?.toString() || ""}
+              destinationId={currentDestination.id.toString()}
             />
           </div>
         </div>
