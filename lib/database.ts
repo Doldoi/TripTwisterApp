@@ -11,157 +11,140 @@ export async function getDestinationByParams(params: SearchParams): Promise<Dest
     const timeColumn = transportMode === "car" ? "drive_time" : "transit_time"
     console.log("사용할 시간 컬럼:", timeColumn)
 
-    // 먼저 travel_time 테이블에 해당 출발지 데이터가 있는지 확인
-    const { data: timeCheck, error: timeCheckError } = await supabase
+    // 1단계: 먼저 travel_time 테이블에서 조건에 맞는 클러스터 ID 목록 가져오기
+    const { data: timeData, error: timeError } = await supabase
       .from("travel_time")
-      .select("*")
-      .eq("departure_location", location)
-      .limit(5)
-
-    console.log("travel_time 테이블 확인:", timeCheck?.length || 0, "개")
-    if (timeCheck && timeCheck.length > 0) {
-      console.log("샘플 데이터:", timeCheck[0])
-    }
-
-    // travel_place 테이블 확인
-    const { data: placeCheck, error: placeCheckError } = await supabase.from("travel_place").select("*").limit(5)
-
-    console.log("travel_place 테이블 확인:", placeCheck?.length || 0, "개")
-    if (placeCheck && placeCheck.length > 0) {
-      console.log("샘플 장소 데이터:", placeCheck[0])
-    }
-
-    // JOIN 쿼리 실행
-    let query = supabase
-      .from("travel_time")
-      .select(`
-        id,
-        cluster,
-        departure_location,
-        drive_time,
-        transit_time,
-        travel_place!inner(id, name, address, image, description, is_jeju, cluster)
-      `)
+      .select("cluster")
       .eq("departure_location", location)
       .gte(timeColumn, minTravelTime)
       .lte(timeColumn, maxTravelTime)
       .not(timeColumn, "is", null)
 
-    console.log("JOIN 쿼리 조건:", {
-      departure_location: location,
-      [`${timeColumn}_gte`]: minTravelTime,
-      [`${timeColumn}_lte`]: maxTravelTime,
-    })
-
-    // 제외할 ID 조건
-    if (excludeId) {
-      query = query.not("travel_place.id", "eq", excludeId)
-      console.log("제외할 ID:", excludeId)
+    if (timeError) {
+      console.error("travel_time 조회 오류:", timeError)
+      return null
     }
+
+    console.log("조건에 맞는 travel_time 데이터:", timeData?.length || 0, "개")
+    
+    if (!timeData || timeData.length === 0) {
+      console.log("조건에 맞는 travel_time 데이터가 없습니다")
+      return null
+    }
+
+    // 클러스터 ID 목록 추출
+    const clusterIds = timeData.map(item => item.cluster)
+    console.log("클러스터 ID 목록:", clusterIds.slice(0, 5), "... 외", clusterIds.length, "개")
+
+    // 2단계: travel_place 테이블에서 해당 클러스터 ID에 해당하는 장소 정보 가져오기
+    let placeQuery = supabase
+      .from("travel_place")
+      .select("*")
+      .in("cluster", clusterIds)
 
     // 제주도 제외 조건
     if (excludeJeju === true || excludeJeju === "true") {
-      query = query.not("travel_place.is_jeju", "eq", true).not("travel_place.cluster", "eq", 100)
+      placeQuery = placeQuery.not("is_jeju", "eq", true).not("cluster", "eq", 100)
       console.log("제주도 제외 조건 적용")
     }
 
-    const { data, error } = await query
-
-    console.log("=== 쿼리 결과 ===")
-    console.log("에러:", error)
-    console.log("결과 개수:", data?.length || 0)
-
-    if (data && data.length > 0) {
-      console.log("첫 번째 결과:", data[0])
+    // 제외할 ID 조건
+    if (excludeId) {
+      placeQuery = placeQuery.neq("id", excludeId)
+      console.log("제외할 ID:", excludeId)
     }
 
-    if (error) {
-      console.error("Supabase 조회 오류:", error)
+    const { data: placeData, error: placeError } = await placeQuery
+
+    if (placeError) {
+      console.error("travel_place 조회 오류:", placeError)
       return null
     }
 
-    if (!data || data.length === 0) {
-      console.log("조건에 맞는 데이터가 없습니다")
+    console.log("조건에 맞는 travel_place 데이터:", placeData?.length || 0, "개")
+    
+    if (!placeData || placeData.length === 0) {
+      console.log("조건에 맞는 travel_place 데이터가 없습니다")
       return null
     }
 
-    // 클러스터별로 그룹화
-    const destinationsByCluster = groupByCluster(data)
-    console.log("클러스터별 그룹화 결과:", Object.keys(destinationsByCluster))
+    // 3단계: 랜덤으로 장소 선택
+    const randomIndex = Math.floor(Math.random() * placeData.length)
+    const selectedPlace = placeData[randomIndex]
+    console.log("선택된 장소:", selectedPlace.name)
 
-    // 클러스터 기반 랜덤 선택
-    return selectRandomDestinationByCluster(destinationsByCluster)
+    // 4단계: 선택된 장소의 클러스터에 해당하는 시간 정보 가져오기
+    const { data: selectedTimeData, error: selectedTimeError } = await supabase
+      .from("travel_time")
+      .select("*")
+      .eq("cluster", selectedPlace.cluster)
+      .eq("departure_location", location)
+      .single()
+
+    if (selectedTimeError) {
+      console.error("선택된 장소의 시간 정보 조회 오류:", selectedTimeError)
+      // 시간 정보가 없어도 장소 정보는 반환
+      return {
+        id: selectedPlace.id,
+        name: selectedPlace.name,
+        address: selectedPlace.address,
+        image: selectedPlace.image,
+        cluster: selectedPlace.cluster,
+        departure_location: location,
+        drive_time: null,
+        transit_time: null,
+        description: selectedPlace.description,
+      }
+    }
+
+    // 5단계: 장소 정보와 시간 정보 결합하여 반환
+    return {
+      id: selectedPlace.id,
+      name: selectedPlace.name,
+      address: selectedPlace.address,
+      image: selectedPlace.image,
+      cluster: selectedPlace.cluster,
+      departure_location: selectedTimeData.departure_location,
+      drive_time: selectedTimeData.drive_time,
+      transit_time: selectedTimeData.transit_time,
+      description: selectedPlace.description,
+    }
   } catch (error) {
     console.error("데이터 조회 오류:", error)
     return null
   }
 }
 
-// 클러스터별로 여행지 그룹화 (JOIN 결과에 맞게 수정)
-function groupByCluster(destinations: any[]): Record<string, any[]> {
-  return destinations.reduce(
-    (acc, destination) => {
-      // travel_place 테이블의 cluster 사용
-      const cluster = destination.travel_place?.cluster?.toString() || "unknown"
-      if (!acc[cluster]) {
-        acc[cluster] = []
-      }
-      acc[cluster].push(destination)
-      return acc
-    },
-    {} as Record<string, any[]>,
-  )
-}
-
-// 클러스터 기반 랜덤 선택 (JOIN 결과에 맞게 수정)
-function selectRandomDestinationByCluster(destinationsByCluster: Record<string, any[]>): Destination {
-  // 클러스터 목록
-  const clusters = Object.keys(destinationsByCluster)
-
-  // 클러스터 랜덤 선택
-  const randomClusterIndex = Math.floor(Math.random() * clusters.length)
-  const selectedCluster = clusters[randomClusterIndex]
-
-  // 선택된 클러스터 내에서 여행지 랜덤 선택
-  const clusterDestinations = destinationsByCluster[selectedCluster]
-  const randomDestinationIndex = Math.floor(Math.random() * clusterDestinations.length)
-  const result = clusterDestinations[randomDestinationIndex]
-
-  console.log("선택된 클러스터:", selectedCluster)
-  console.log("선택된 여행지:", result.travel_place?.name)
-
-  // JOIN 결과에서 데이터 추출
-  return {
-    id: result.travel_place.id, // travel_place의 ID 사용
-    name: result.travel_place.name,
-    address: result.travel_place.address,
-    image: result.travel_place.image,
-    cluster: result.travel_place.cluster,
-    departure_location: result.departure_location,
-    drive_time: result.drive_time,
-    transit_time: result.transit_time,
-    description: result.travel_place.description,
-  }
-}
-
-// 특정 ID로 여행지 조회하는 함수 (JOIN 사용)
+// 특정 ID로 여행지 조회하는 함수 (JOIN 대신 두 번의 쿼리 사용)
 export async function getDestinationById(id: string): Promise<Destination | null> {
   try {
-    // travel_place 테이블에서 장소 정보 조회
-    const { data: placeData, error: placeError } = await supabase.from("travel_place").select("*").eq("id", id).single()
+    console.log("ID로 여행지 조회:", id)
+    
+    // 1단계: travel_place 테이블에서 장소 정보 조회
+    const { data: placeData, error: placeError } = await supabase
+      .from("travel_place")
+      .select("*")
+      .eq("id", id)
+      .single()
 
-    if (placeError || !placeData) {
+    if (placeError) {
       console.error("장소 정보 조회 오류:", placeError)
       return null
     }
 
-    // travel_time 테이블에서 시간 정보 조회 (첫 번째 결과만 사용)
+    if (!placeData) {
+      console.log("해당 ID의 장소 정보가 없습니다:", id)
+      return null
+    }
+
+    console.log("장소 정보 조회 성공:", placeData.name)
+
+    // 2단계: travel_time 테이블에서 시간 정보 조회 (첫 번째 결과만 사용)
     const { data: timeData, error: timeError } = await supabase
       .from("travel_time")
       .select("*")
       .eq("cluster", placeData.cluster)
       .limit(1)
-      .single()
 
     if (timeError) {
       console.error("시간 정보 조회 오류:", timeError)
@@ -179,16 +162,34 @@ export async function getDestinationById(id: string): Promise<Destination | null
       }
     }
 
-    // 두 테이블의 정보 결합
+    if (!timeData || timeData.length === 0) {
+      console.log("해당 클러스터의 시간 정보가 없습니다:", placeData.cluster)
+      // 시간 정보가 없어도 장소 정보는 반환
+      return {
+        id: placeData.id,
+        name: placeData.name,
+        address: placeData.address,
+        image: placeData.image,
+        cluster: placeData.cluster,
+        departure_location: "", // 기본값
+        drive_time: null, // 기본값
+        transit_time: null, // 기본값
+        description: placeData.description,
+      }
+    }
+
+    console.log("시간 정보 조회 성공:", timeData[0].departure_location)
+
+    // 3단계: 두 테이블의 정보 결합
     return {
       id: placeData.id,
       name: placeData.name,
       address: placeData.address,
       image: placeData.image,
       cluster: placeData.cluster,
-      departure_location: timeData?.departure_location || "",
-      drive_time: timeData?.drive_time || null,
-      transit_time: timeData?.transit_time || null,
+      departure_location: timeData[0].departure_location,
+      drive_time: timeData[0].drive_time,
+      transit_time: timeData[0].transit_time,
       description: placeData.description,
     }
   } catch (error) {
