@@ -70,23 +70,6 @@ export default function ResultPageClient({
       return
     }
 
-    // 먼저 미리 로드된 데이터가 있는지 확인
-    const preloadedData = sessionStorage.getItem("preloadedDestination")
-    if (preloadedData) {
-      try {
-        const parsedData = JSON.parse(preloadedData)
-        setDestination(parsedData)
-        setLoading(false)
-        // 사용한 데이터는 삭제
-        sessionStorage.removeItem("preloadedDestination")
-        return
-      } catch (error) {
-        console.error("미리 로드된 데이터 파싱 오류:", error)
-        // 파싱 오류 시 일반 API 호출로 fallback
-      }
-    }
-
-    // 미리 로드된 데이터가 없거나 파싱 실패 시 일반 API 호출
     const fetchDestination = async () => {
       try {
         setLoading(true)
@@ -116,6 +99,11 @@ export default function ResultPageClient({
           setError("조건에 맞는 여행지가 없습니다.")
         } else {
           setDestination(result.destination)
+
+          // 여행지를 찾으면 URL에 destinationId 추가 (새로고침 시 같은 여행지 유지)
+          const currentUrl = new URL(window.location.href)
+          currentUrl.searchParams.set("destinationId", result.destination.id.toString())
+          router.replace(currentUrl.pathname + "?" + currentUrl.searchParams.toString())
         }
       } catch (error: any) {
         setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")

@@ -16,7 +16,7 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
 
-  // 클라이언트 사이드에서만 실행되도록 함
+  // 클라이언트 사이드에서�� 실행되도록 함
   useEffect(() => {
     setMounted(true)
   }, [])
