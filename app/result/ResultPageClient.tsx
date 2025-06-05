@@ -28,23 +28,6 @@ export default function ResultPageClient({
     const minTravelTime = searchParams.minTravelTime as string
     const maxTravelTime = searchParams.maxTravelTime as string
     const transportMode = searchParams.transportMode as string
-    const preloaded = searchParams.preloaded as string
-
-    // 미리 로드된 데이터가 있는지 확인
-    if (preloaded === "true") {
-      const preloadedData = sessionStorage.getItem("preloadedDestination")
-      if (preloadedData) {
-        try {
-          const parsedData = JSON.parse(preloadedData)
-          setDestination(parsedData)
-          setLoading(false)
-          sessionStorage.removeItem("preloadedDestination") // 사용 후 제거
-          return
-        } catch (error) {
-          console.error("미리 로드된 데이터 파싱 오류:", error)
-        }
-      }
-    }
 
     // destinationId가 있으면 해당 여행지만 조회
     if (destinationId && destinationId !== "undefined") {
@@ -87,6 +70,23 @@ export default function ResultPageClient({
       return
     }
 
+    // 먼저 미리 로드된 데이터가 있는지 확인
+    const preloadedData = sessionStorage.getItem("preloadedDestination")
+    if (preloadedData) {
+      try {
+        const parsedData = JSON.parse(preloadedData)
+        setDestination(parsedData)
+        setLoading(false)
+        // 사용한 데이터는 삭제
+        sessionStorage.removeItem("preloadedDestination")
+        return
+      } catch (error) {
+        console.error("미리 로드된 데이터 파싱 오류:", error)
+        // 파싱 오류 시 일반 API 호출로 fallback
+      }
+    }
+
+    // 미리 로드된 데이터가 없거나 파싱 실패 시 일반 API 호출
     const fetchDestination = async () => {
       try {
         setLoading(true)

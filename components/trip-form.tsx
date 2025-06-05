@@ -37,9 +37,6 @@ export default function TripForm() {
   const [transportMode, setTransportMode] = useState<"publicTransport" | "car">("publicTransport")
   const [excludeJeju, setExcludeJeju] = useState(true)
   const [showCountdown, setShowCountdown] = useState(false)
-  const [apiResult, setApiResult] = useState<any>(null)
-  const [apiLoading, setApiLoading] = useState(false)
-  const [countdownComplete, setCountdownComplete] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -70,37 +67,6 @@ export default function TripForm() {
     }
   }, [searchParams, router])
 
-  // API 호출과 카운트다운이 모두 완료되면 결과 페이지로 이동
-  useEffect(() => {
-    if (countdownComplete && !apiLoading) {
-      if (apiResult) {
-        // API 결과가 있으면 결과와 함께 이동
-        const params = new URLSearchParams({
-          location: selectedLocation,
-          minTravelTime: "0",
-          maxTravelTime: travelTime[0].toString(),
-          transportMode,
-          excludeJeju: excludeJeju.toString(),
-          preloaded: "true", // 미리 로드된 데이터임을 표시
-        })
-
-        // 결과 데이터를 sessionStorage에 저장
-        sessionStorage.setItem("preloadedDestination", JSON.stringify(apiResult))
-        router.push(`/result?${params.toString()}`)
-      } else {
-        // API 실패 시 기존 방식으로 이동
-        const params = new URLSearchParams({
-          location: selectedLocation,
-          minTravelTime: "0",
-          maxTravelTime: travelTime[0].toString(),
-          transportMode,
-          excludeJeju: excludeJeju.toString(),
-        })
-        router.push(`/result?${params.toString()}`)
-      }
-    }
-  }, [countdownComplete, apiLoading, apiResult, selectedLocation, travelTime, transportMode, excludeJeju, router])
-
   const handleLocationSelect = (location: string) => {
     setSelectedLocation(location)
   }
@@ -116,15 +82,12 @@ export default function TripForm() {
     }
 
     setShowCountdown(true)
-    setCountdownComplete(false)
-    setApiResult(null)
 
-    // 카운트다운과 동시에 API 호출 시작
+    // 카운트다운과 동시에 API 호출 시작 (백그라운드에서)
     startApiCall()
   }
 
   const startApiCall = async () => {
-    setApiLoading(true)
     try {
       const params = {
         location: selectedLocation,
@@ -145,20 +108,26 @@ export default function TripForm() {
       const result = await response.json()
 
       if (response.ok && result.destination) {
-        setApiResult(result.destination)
-      } else {
-        setApiResult(null)
+        // API 성공 시 sessionStorage에 저장
+        sessionStorage.setItem("preloadedDestination", JSON.stringify(result.destination))
       }
     } catch (error) {
-      console.error("API 호출 오류:", error)
-      setApiResult(null)
-    } finally {
-      setApiLoading(false)
+      console.error("백그라운드 API 호출 오류:", error)
+      // 에러가 발생해도 무시 (결과 페이지에서 다시 시도)
     }
   }
 
   const handleCountdownComplete = () => {
-    setCountdownComplete(true)
+    // 카운트다운 완료되면 무조건 결과 페이지로 이동
+    const params = new URLSearchParams({
+      location: selectedLocation,
+      minTravelTime: "0",
+      maxTravelTime: travelTime[0].toString(),
+      transportMode,
+      excludeJeju: excludeJeju.toString(),
+    })
+
+    router.push(`/result?${params.toString()}`)
   }
 
   return (
