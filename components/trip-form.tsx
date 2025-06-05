@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -33,23 +33,80 @@ const LOCATIONS = [
 
 export default function TripForm() {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
-  const [travelTime, setTravelTime] = useState([2])
+  const [travelTime, setTravelTime] = useState([3]) // 3시간으로 변경
   const [transportMode, setTransportMode] = useState<"publicTransport" | "car">("publicTransport")
-  const [excludeJeju, setExcludeJeju] = useState(true) // 기본값을 true로 변경
+  const [excludeJeju, setExcludeJeju] = useState(true)
   const [showCountdown, setShowCountdown] = useState(false)
+  const [apiResult, setApiResult] = useState<any>(null)
+  const [apiLoading, setApiLoading] = useState(false)
+  const [countdownComplete, setCountdownComplete] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // URL 파라미터에서 이전 선택값 복원
+  useEffect(() => {
+    const location = searchParams.get("location")
+    const maxTravelTime = searchParams.get("maxTravelTime")
+    const transport = searchParams.get("transportMode")
+    const excludeJejuParam = searchParams.get("excludeJeju")
+
+    if (location) {
+      setSelectedLocation(location)
+    }
+    if (maxTravelTime) {
+      setTravelTime([Number.parseInt(maxTravelTime)])
+    }
+    if (transport) {
+      setTransportMode(transport as "publicTransport" | "car")
+    }
+    if (excludeJejuParam) {
+      setExcludeJeju(excludeJejuParam === "true")
+    }
+
+    // URL 파라미터가 있으면 깔끔한 URL로 변경
+    if (location || maxTravelTime || transport || excludeJejuParam) {
+      router.replace("/")
+    }
+  }, [searchParams, router])
+
+  // API 호출과 카운트다운이 모두 완료되면 결과 페이지로 이동
+  useEffect(() => {
+    if (countdownComplete && !apiLoading) {
+      if (apiResult) {
+        // API 결과가 있으면 결과와 함께 이동
+        const params = new URLSearchParams({
+          location: selectedLocation,
+          minTravelTime: "0",
+          maxTravelTime: travelTime[0].toString(),
+          transportMode,
+          excludeJeju: excludeJeju.toString(),
+          preloaded: "true", // 미리 로드된 데이터임을 표시
+        })
+
+        // 결과 데이터를 sessionStorage에 저장
+        sessionStorage.setItem("preloadedDestination", JSON.stringify(apiResult))
+        router.push(`/result?${params.toString()}`)
+      } else {
+        // API 실패 시 기존 방식으로 이동
+        const params = new URLSearchParams({
+          location: selectedLocation,
+          minTravelTime: "0",
+          maxTravelTime: travelTime[0].toString(),
+          transportMode,
+          excludeJeju: excludeJeju.toString(),
+        })
+        router.push(`/result?${params.toString()}`)
+      }
+    }
+  }, [countdownComplete, apiLoading, apiResult, selectedLocation, travelTime, transportMode, excludeJeju, router])
 
   const handleLocationSelect = (location: string) => {
     setSelectedLocation(location)
   }
 
   const handleSubmit = () => {
-    console.log("=== 폼 제출 시작 ===")
-    console.log("선택된 출발지:", selectedLocation)
-
     if (!selectedLocation) {
-      console.log("출발지가 선택되지 않음")
       toast({
         title: "출발지를 선택해주세요",
         description: "여행을 시작할 지역을 먼저 선택해주세요.",
@@ -58,24 +115,50 @@ export default function TripForm() {
       return
     }
 
-    console.log("카운트다운 시작")
     setShowCountdown(true)
+    setCountdownComplete(false)
+    setApiResult(null)
+
+    // 카운트다운과 동시에 API 호출 시작
+    startApiCall()
+  }
+
+  const startApiCall = async () => {
+    setApiLoading(true)
+    try {
+      const params = {
+        location: selectedLocation,
+        minTravelTime: 0,
+        maxTravelTime: travelTime[0],
+        transportMode,
+        excludeJeju: excludeJeju.toString(),
+      }
+
+      const response = await fetch("/api/destinations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.destination) {
+        setApiResult(result.destination)
+      } else {
+        setApiResult(null)
+      }
+    } catch (error) {
+      console.error("API 호출 오류:", error)
+      setApiResult(null)
+    } finally {
+      setApiLoading(false)
+    }
   }
 
   const handleCountdownComplete = () => {
-    console.log("=== 카운트다운 완료 ===")
-    const params = new URLSearchParams({
-      location: selectedLocation,
-      minTravelTime: "0",
-      maxTravelTime: travelTime[0].toString(),
-      transportMode,
-      excludeJeju: excludeJeju.toString(),
-    })
-
-    console.log("생성된 파라미터:", params.toString())
-    console.log("이동할 URL:", `/result?${params.toString()}`)
-
-    router.push(`/result?${params.toString()}`)
+    setCountdownComplete(true)
   }
 
   return (
@@ -156,7 +239,7 @@ export default function TripForm() {
                 htmlFor="excludeJeju"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                제주도 여행지 제외하기
+                제주도 여행지 제외하기 (권장)
               </label>
             </div>
             <p className="text-xs text-gray-500 mt-2 ml-6">더 다양한 지역의 여행지를 추천받으려면 체크해주세요</p>

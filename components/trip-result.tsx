@@ -111,8 +111,11 @@ export default function TripResult({ destination, searchParams }: TripResultProp
     }
   }
 
-  const kakaoMapUrl = `https://map.kakao.com/?sName=${encodeURIComponent(searchParams.location as string)}&eName=${encodeURIComponent(currentDestination.name)}`
-  const accommodationUrl = `https://www.goodchoice.kr/product/search/2/${encodeURIComponent(currentDestination.name)}`
+  // 길찾기 URL - 출발지 없이 도착지만 설정
+  const kakaoMapUrl = `https://map.kakao.com/?eName=${encodeURIComponent(currentDestination.name)}`
+
+  // 숙소찾기 URL - 여기어때 메인 페이지 (검색창에 미리 입력은 불가능)
+  const accommodationUrl = `https://www.goodchoice.kr/`
 
   // 이동시간 표시
   const travelTime =
@@ -238,7 +241,6 @@ export default function TripResult({ destination, searchParams }: TripResultProp
                   <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                   <span>이동시간: {travelTime}시간</span>
                 </div>
-                {/* 제주도 제외 조건 표시 제거 */}
               </div>
             </div>
           )}

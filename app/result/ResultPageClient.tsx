@@ -28,6 +28,23 @@ export default function ResultPageClient({
     const minTravelTime = searchParams.minTravelTime as string
     const maxTravelTime = searchParams.maxTravelTime as string
     const transportMode = searchParams.transportMode as string
+    const preloaded = searchParams.preloaded as string
+
+    // 미리 로드된 데이터가 있는지 확인
+    if (preloaded === "true") {
+      const preloadedData = sessionStorage.getItem("preloadedDestination")
+      if (preloadedData) {
+        try {
+          const parsedData = JSON.parse(preloadedData)
+          setDestination(parsedData)
+          setLoading(false)
+          sessionStorage.removeItem("preloadedDestination") // 사용 후 제거
+          return
+        } catch (error) {
+          console.error("미리 로드된 데이터 파싱 오류:", error)
+        }
+      }
+    }
 
     // destinationId가 있으면 해당 여행지만 조회
     if (destinationId && destinationId !== "undefined") {
