@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import TripForm from "@/components/trip-form"
 import type { Metadata } from "next"
 
@@ -15,9 +16,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-fredoka text-transparent bg-gradient-to-r from-blue-500 via-blue-600 to-cyan-600 bg-clip-text mb-4">
               Trip Twister
             </h1>
-            <p className="text-gray-600 text-base md:text-lg">
-              조건에 맞는 랜덤 여행지를 추천해드려요
-            </p>
+            <p className="text-gray-600 text-base md:text-lg">조건에 맞는 랜덤 여행지를 추천해드려요</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
@@ -25,7 +24,9 @@ export default function Home() {
               <div className="flex items-center gap-3 mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">여행 조건 입력</h2>
               </div>
-              <TripForm />
+              <Suspense fallback={<div>로딩 중...</div>}>
+                <TripForm />
+              </Suspense>
             </div>
           </div>
         </div>
