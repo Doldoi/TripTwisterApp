@@ -26,23 +26,12 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleCopyUrl = () => {
+    // 현재 URL의 기본 부분만 사용하고 destinationId만 추가
+    const baseUrl = `${window.location.origin}/result`
+    const shareUrl = `${baseUrl}?destinationId=${destinationId}`
 
-    // destinationId가 유효한지 확인
-    if (!destinationId || destinationId === "undefined") {
-      toast({
-        title: "오류가 발생했습니다",
-        description: "여행지 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // 현재 URL에서 쿼리 파라미터 가져오기
-    const currentUrl = new URL(window.location.href)
-    // destinationId 추가
-    currentUrl.searchParams.set("destinationId", destinationId)
-
-    const shareUrl = currentUrl.toString()
+    console.log("복사할 URL:", shareUrl)
+    console.log("destinationId:", destinationId)
 
     navigator.clipboard.writeText(shareUrl)
     toast({
@@ -52,21 +41,10 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleKakaoShare = () => {
-
-    // destinationId가 유효한지 확인
-    if (!destinationId || destinationId === "undefined") {
-      toast({
-        title: "오류가 발생했습니다",
-        description: "여행지 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
-        variant: "destructive",
-      })
-      return
-    }
+    const shareUrl = `${window.location.origin}/result?destinationId=${destinationId}`
 
     if (window.Kakao && window.Kakao.Share) {
       try {
-        const shareUrl = `${window.location.origin}/result?destinationId=${destinationId}`
-
         window.Kakao.Share.sendDefault({
           objectType: "feed",
           content: {
@@ -90,17 +68,15 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
         })
       } catch (error) {
         console.error("카카오톡 공유 에러:", error)
-        // 카카오 SDK 초기화 실패 시 대체 방법으로 URL 열기
         const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
           `Trip Twister - ${destinationName} 여행지 추천`,
-        )}&url=${encodeURIComponent(`${window.location.origin}/result?destinationId=${destinationId}`)}`
+        )}&url=${encodeURIComponent(shareUrl)}`
         window.open(kakaoShareUrl, "_blank")
       }
     } else {
-      // 카카오 SDK가 로드되지 않은 경우 대체 방법으로 URL 열기
       const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
         `Trip Twister - ${destinationName} 여행지 추천`,
-      )}&url=${encodeURIComponent(`${window.location.origin}/result?destinationId=${destinationId}`)}`
+      )}&url=${encodeURIComponent(shareUrl)}`
       window.open(kakaoShareUrl, "_blank")
     }
   }
