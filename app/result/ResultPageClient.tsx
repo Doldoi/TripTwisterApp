@@ -29,20 +29,11 @@ export default function ResultPageClient({
     const maxTravelTime = searchParams.maxTravelTime as string
     const transportMode = searchParams.transportMode as string
 
-    console.log("=== ResultPageClient useEffect 실행 ===")
-    console.log("받은 searchParams:", searchParams)
-    console.log("destinationId:", destinationId)
-    console.log("location:", location)
-
-    // destinationId가 있으면 해당 여행지만 조회 (우선 처리)
-    if (destinationId && destinationId !== "undefined" && destinationId !== "null") {
-      console.log("특정 여행지 조회 모드")
+    // destinationId가 있으면 해당 여행지만 조회
+    if (destinationId && destinationId !== "undefined") {
       const fetchSpecificDestination = async () => {
         try {
           setLoading(true)
-          console.log("API 호출 시작 - 특정 여행지 조회")
-          console.log("조회할 destinationId:", destinationId)
-
           const response = await fetch("/api/destinations", {
             method: "POST",
             headers: {
@@ -51,9 +42,7 @@ export default function ResultPageClient({
             body: JSON.stringify({ destinationId }),
           })
 
-          console.log("API 응답 상태:", response.status)
           const result = await response.json()
-          console.log("API 응답 결과:", result)
 
           if (!response.ok) {
             throw new Error(result.error || "여행지 검색 실패")
@@ -63,10 +52,8 @@ export default function ResultPageClient({
             setError("해당 여행지를 찾을 수 없습니다.")
           } else {
             setDestination(result.destination)
-            console.log("특정 여행지 조회 성공:", result.destination.name)
           }
         } catch (error: any) {
-          console.error("특정 여행지 조회 오류:", error)
           setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
         } finally {
           setLoading(false)
@@ -79,17 +66,13 @@ export default function ResultPageClient({
 
     // destinationId가 없으면 기존 랜덤 검색 로직
     if (!location || !minTravelTime || !maxTravelTime || !transportMode) {
-      console.log("필수 파라미터 부족, 홈으로 이동")
       router.push("/")
       return
     }
 
-    console.log("랜덤 검색 모드")
     const fetchDestination = async () => {
       try {
         setLoading(true)
-        console.log("API 호출 시작 - 랜덤 검색")
-
         const params = {
           location: searchParams.location as string,
           minTravelTime: Number.parseInt(searchParams.minTravelTime as string),
@@ -97,8 +80,6 @@ export default function ResultPageClient({
           transportMode: searchParams.transportMode as string,
           excludeJeju: searchParams.excludeJeju as string,
         }
-
-        console.log("API 호출 파라미터:", params)
 
         const response = await fetch("/api/destinations", {
           method: "POST",
@@ -108,9 +89,7 @@ export default function ResultPageClient({
           body: JSON.stringify(params),
         })
 
-        console.log("API 응답 상태:", response.status)
         const result = await response.json()
-        console.log("API 응답 결과 전체:", result)
 
         if (!response.ok) {
           throw new Error(result.error || "여행지 검색 실패")
@@ -120,10 +99,8 @@ export default function ResultPageClient({
           setError("조건에 맞는 여행지가 없습니다.")
         } else {
           setDestination(result.destination)
-          console.log("랜덤 검색 성공:", result.destination.name)
         }
       } catch (error: any) {
-        console.error("랜덤 검색 오류:", error)
         setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
       } finally {
         setLoading(false)

@@ -26,14 +26,11 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleCopyUrl = () => {
-    // 현재 URL의 기본 부분만 사용하고 destinationId만 추가
-    const baseUrl = `${window.location.origin}/result`
-    const shareUrl = `${baseUrl}?destinationId=${destinationId}`
-
-    console.log("복사할 URL:", shareUrl)
-    console.log("destinationId:", destinationId)
-
-    navigator.clipboard.writeText(shareUrl)
+    // 현재 URL에서 쿼리 파라미터 가져오기
+    const currentUrl = new URL(window.location.href)
+    // destinationId 추가
+    currentUrl.searchParams.set("destinationId", destinationId)
+    navigator.clipboard.writeText(currentUrl.toString())
     toast({
       title: "URL이 복사되었습니다",
       description: "친구에게 공유할 수 있습니다.",
@@ -41,8 +38,6 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
   }
 
   const handleKakaoShare = () => {
-    const shareUrl = `${window.location.origin}/result?destinationId=${destinationId}`
-
     if (window.Kakao && window.Kakao.Share) {
       try {
         window.Kakao.Share.sendDefault({
@@ -50,33 +45,35 @@ export default function ShareButtons({ title, destinationName, destinationId }: 
           content: {
             title: title,
             description: `Trip Twister에서 ${destinationName}을(를) 추천받았어요!`,
-            imageUrl: `${window.location.origin}/images/share-image.png`,
+            imageUrl: `${window.location.origin}/images/share-image.png`, // 공유용 이미지 경로
             link: {
-              mobileWebUrl: shareUrl,
-              webUrl: shareUrl,
+              mobileWebUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
+              webUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
             },
           },
           buttons: [
             {
               title: "여행지 확인하기",
               link: {
-                mobileWebUrl: shareUrl,
-                webUrl: shareUrl,
+                mobileWebUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
+                webUrl: `${window.location.origin}/result?destinationId=${destinationId}`,
               },
             },
           ],
         })
       } catch (error) {
         console.error("카카오톡 공유 에러:", error)
+        // 카카오 SDK 초기화 실패 시 대체 방법으로 URL 열기
         const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
           `Trip Twister - ${destinationName} 여행지 추천`,
-        )}&url=${encodeURIComponent(shareUrl)}`
+        )}&url=${encodeURIComponent(`${window.location.origin}/result?destinationId=${destinationId}`)}`
         window.open(kakaoShareUrl, "_blank")
       }
     } else {
+      // 카카오 SDK가 로드되지 않은 경우 대체 방법으로 URL 열기
       const kakaoShareUrl = `https://accounts.kakao.com/login/?continue=https://sharer.kakao.com/talk/friends/picker/link?app_key=87cf62c1a95e5582b7e342d76fbc8f96&text=${encodeURIComponent(
         `Trip Twister - ${destinationName} 여행지 추천`,
-      )}&url=${encodeURIComponent(shareUrl)}`
+      )}&url=${encodeURIComponent(`${window.location.origin}/result?destinationId=${destinationId}`)}`
       window.open(kakaoShareUrl, "_blank")
     }
   }
