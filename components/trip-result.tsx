@@ -141,7 +141,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
       className="space-y-6"
     >
       <Card className="overflow-hidden bg-white shadow-xl rounded-xl border-0">
-        <div className="relative h-72 md:h-96 bg-gray-100">
+        <div className="relative h-96 md:h-[500px] lg:h-[600px]">
           {imageLoading && (
             <div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-10">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
