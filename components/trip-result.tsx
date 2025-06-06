@@ -132,6 +132,9 @@ export default function TripResult({ destination, searchParams }: TripResultProp
     return `${imageUrl}${separator}v=${currentDestination.id}`
   }
 
+  // 이미지가 placeholder인지 확인
+  const isPlaceholderImage = imageError || !currentDestination.image
+
   return (
     <motion.div
       key={currentDestination.id} // 여행지가 바뀔 때마다 컴포넌트 리렌더링 강제
@@ -141,7 +144,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
       className="space-y-6"
     >
       <Card className="overflow-hidden bg-white shadow-xl rounded-xl border-0">
-        <div className="relative h-96 md:h-[500px] lg:h-[600px]">
+        <div className="relative h-96 md:h-[500px] lg:h-[600px] bg-gray-200">
           {imageLoading && (
             <div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-10">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -157,7 +160,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
             }
             alt={`${currentDestination.name} 여행지 이미지`}
             fill
-            className="object-contain" // 이미지 전체가 보이도록 변경
+            className={isPlaceholderImage ? "object-cover" : "object-contain"} // placeholder일 때는 cover, 실제 이미지일 때는 contain
             priority={false} // priority를 false로 설정하여 캐싱 이슈 방지
             unoptimized={true} // 이미지 최적화 비활성화로 캐싱 문제 해결
             onLoad={() => setImageLoading(false)}
@@ -218,17 +221,6 @@ export default function TripResult({ destination, searchParams }: TripResultProp
               </Button>
             </div>
           )}
-          <div className="absolute bottom-4 right-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowErrorReport(true)}
-              className="bg-white/90 hover:bg-white text-gray-800 border-0 shadow-md"
-            >
-              <AlertTriangle className="h-4 w-4 mr-1 text-red-500" />
-              오류신고
-            </Button>
-          </div>
         </div>
 
         {/* 이미지 출처 문구 - 이미지 바로 아래 */}
@@ -245,13 +237,39 @@ export default function TripResult({ destination, searchParams }: TripResultProp
           {/* 공유 링크가 아닐 때만 여행 정보 표시 */}
           {!isSharedLink && (
             <div className="bg-blue-50 p-5 rounded-xl mb-6">
-              <h3 className="font-semibold text-gray-800 mb-3">여행 정보</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-800">여행 정보</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowErrorReport(true)}
+                  className="bg-white hover:bg-gray-50 text-gray-600 border-gray-300 text-xs px-3 py-1"
+                >
+                  <AlertTriangle className="h-3 w-3 mr-1 text-red-500" />
+                  오류신고
+                </Button>
+              </div>
               <div className="grid grid-cols-1 gap-3 text-sm bg-white p-3 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                   <span>이동시간: {travelTime}시간</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 공유 링크일 때는 오류신고 버튼을 별도로 표시 */}
+          {isSharedLink && (
+            <div className="mb-6 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowErrorReport(true)}
+                className="bg-white hover:bg-gray-50 text-gray-600 border-gray-300 text-xs px-3 py-1"
+              >
+                <AlertTriangle className="h-3 w-3 mr-1 text-red-500" />
+                오류신고
+              </Button>
             </div>
           )}
 
