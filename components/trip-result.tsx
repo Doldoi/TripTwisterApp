@@ -141,7 +141,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
       className="space-y-6"
     >
       <Card className="overflow-hidden bg-white shadow-xl rounded-xl border-0">
-        <div className="relative h-72 md:h-96">
+        <div className="relative h-72 md:h-96 bg-gray-100">
           {imageLoading && (
             <div className="absolute inset-0 bg-gray-200 flex items-center justify-center z-10">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -157,7 +157,7 @@ export default function TripResult({ destination, searchParams }: TripResultProp
             }
             alt={`${currentDestination.name} 여행지 이미지`}
             fill
-            className="object-cover"
+            className="object-contain" // 이미지 전체가 보이도록 변경
             priority={false} // priority를 false로 설정하여 캐싱 이슈 방지
             unoptimized={true} // 이미지 최적화 비활성화로 캐싱 문제 해결
             onLoad={() => setImageLoading(false)}
@@ -230,6 +230,16 @@ export default function TripResult({ destination, searchParams }: TripResultProp
             </Button>
           </div>
         </div>
+
+        {/* 이미지 출처 문구 - 이미지 바로 아래 */}
+        {currentDestination.image && !imageError && (
+          <div className="px-6 py-2 bg-gray-50 border-b">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              본 저작물은 한국관광공사에서 작성하여 공공누리 제1유형으로 개방한 국내관광정보 서비스를 이용하였으며, 해당
+              저작물은 한국관광공사(http://www.visitkorea.or.kr)에서 무료로 다운받으실 수 있습니다.
+            </p>
+          </div>
+        )}
 
         <div className="p-6">
           {/* 공유 링크가 아닐 때만 여행 정보 표시 */}
