@@ -73,6 +73,18 @@ export default function ResultPageClient({
     const fetchDestination = async () => {
       try {
         setLoading(true)
+
+        // 새로고침 시 같은 여행지 유지를 위해 sessionStorage 확인
+        const currentUrl = window.location.href
+        const cachedData = sessionStorage.getItem(`destination_${currentUrl}`)
+
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData)
+          setDestination(parsedData)
+          setLoading(false)
+          return
+        }
+
         const params = {
           location: searchParams.location as string,
           minTravelTime: Number.parseInt(searchParams.minTravelTime as string),
@@ -100,10 +112,8 @@ export default function ResultPageClient({
         } else {
           setDestination(result.destination)
 
-          // 여행지를 찾으면 URL에 destinationId 추가 (새로고침 시 같은 여행지 유지)
-          const currentUrl = new URL(window.location.href)
-          currentUrl.searchParams.set("destinationId", result.destination.id.toString())
-          router.replace(currentUrl.pathname + "?" + currentUrl.searchParams.toString())
+          // 새로고침 시 같은 여행지 유지를 위해 sessionStorage에 저장
+          sessionStorage.setItem(`destination_${currentUrl}`, JSON.stringify(result.destination))
         }
       } catch (error: any) {
         setError(error.message || "여행지를 불러오는 중 오류가 발생했습니다.")
