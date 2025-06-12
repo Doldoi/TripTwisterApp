@@ -1,7 +1,6 @@
 import { Suspense } from "react"
 import TripForm from "@/components/trip-form"
 import type { Metadata } from "next"
-import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata: Metadata = {
   title: "Trip Twister - 랜덤 여행지 추천",
@@ -10,8 +9,6 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
-      <GoogleAnalytics gaId="NEXT_PUBLIC_GA_ID" />
       <main className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-blue-50">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-3xl mx-auto">
@@ -35,6 +32,5 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </>
   )
 }

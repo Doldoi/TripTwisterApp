@@ -4,7 +4,6 @@ import { Inter, Fredoka as Fredoka_One } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
-import { GoogleAnalytics } from "@next/third-parties/google";
 
 const inter = Inter({ subsets: ["latin"] });
 const fredoka = Fredoka_One({
@@ -32,7 +31,19 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${fredoka.variable}`}>
       <head>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string} />
+        {/* ✅ Google Analytics - 스크립트 삽입 */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+          `}
+        </Script>
         {/* Kakao SDK */}
         <Script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"
