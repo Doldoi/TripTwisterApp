@@ -31,6 +31,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${fredoka.variable}`}>
       <head>
+        {/*사이트 소유권 확인용 메타 태그*/}
+        <meta name="google-adsense-account" content="ca-pub-2247926004873845"></meta>
+
         {/* ✅ Google Analytics - 스크립트 삽입 */}
         <Script
           strategy="afterInteractive"
