@@ -21,7 +21,7 @@ export default function Home() {
 
             <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
               <div className="p-6 md:p-8">
-                <div className="flex items-center gap-3 mb-6">
+                <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">여행 조건 입력</h2>
                     <p style={{ fontSize: '13px', color: '#888', marginTop: '1rem' }}>
                       Trip Twister는 출발 지역, 이동 시간, 교통 수단에 따라 여행지 정보를 랜덤으로 추천해주는 서비스입니다.
