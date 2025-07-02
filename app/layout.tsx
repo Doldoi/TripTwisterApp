@@ -31,6 +31,8 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${fredoka.variable}`}>
       <head>
+        <title>랜덤 여행지 추천 | Trip Twister</title>
+        <meta name="description" content="출발지, 이동 시간, 교통수단에 따라 전국의 여행지를 추천해드리는 웹사이트입니다. 여행지 설명, 사진등 정보 포함. " />
         {/*사이트 소유권 확인용 메타 태그*/}
         <meta name="google-adsense-account" content="ca-pub-2247926004873845"></meta>
 
